@@ -123,11 +123,9 @@ function generateNewOperands() {
   // 61-70, 1-30
 
   // If max is 100, pick a number less than 90.
-  operands[0] = Math.floor((max - 10) * Math.random()) + 1;
-  tailIndex = operands[0] - 1;
+  operands[0] = Math.floor((max - 80) * Math.random()) + 1;
   var bigger10 = roundUpTens(operands[0]);
   operands[1] = Math.floor((max - bigger10) * Math.random()) + 1;
-  console.log("operands:", operands);
 }
 
 function hidePrompt() {
@@ -136,7 +134,6 @@ function hidePrompt() {
 }
 
 function erase() {
-  console.log("tailIndex:", tailIndex);
   var bigger = Math.max(operands[0], operands[1]);
   var i = 0;
   var task = setInterval(() => {
@@ -144,6 +141,7 @@ function erase() {
       clearInterval(task);
       generateNewOperands();
       fill();
+      // setTimeout(fill, 2000);
     } else { 
       if (i < operands[0]) {
         cells[tailIndex - i].setAttribute('fill', cellOffColor);
@@ -157,7 +155,7 @@ function erase() {
 }
 
 function whichOperand(i) {
-  if (i <= tailIndex && tailIndex - i <= operands[0]) {
+  if (i <= tailIndex && tailIndex - i < operands[0]) {
     return 0;
   } else if (max - i <= operands[1]) {
     return 1;
@@ -198,8 +196,6 @@ function onHover(i) {
     if (operandIndex == 1 && isFringe(value, 1)) {
       cells[i].style.cursor = 'n-resize';
     }
-
-    // console.log("cellToValue(i):", cellToValue(i));
   };
 }
 
@@ -210,19 +206,13 @@ function onUnhover(i) {
 }
 
 function fill() {
-  var bigger = Math.max(operands[0], operands[1]);
   var i = 0;
   var task = setInterval(() => {
-    if (i >= bigger) {
+    if (i >= operands[1]) {
       clearInterval(task);
       setTimeout(drop, 200);
     } else {
-      if (i < operands[0]) {
-        cells[i].setAttribute('fill', cellOnColors[0]);
-      }
-      if (i < operands[1]) {
-        cells[max - 1 - i].setAttribute('fill', cellOnColors[1]);
-      }
+      cells[max - 1 - i].setAttribute('fill', cellOnColors[1]);
     }
     i += 1;
   }, 10);
@@ -233,9 +223,8 @@ function roundUpTens(x) {
 }
 
 function drop() {
-  var nrows = (max - roundUpTens(operands[0]) - roundUpTens(operands[1])) / 10;
-  tailIndex += nrows * 10;
-  console.log("tailIndex:", tailIndex);
+  var nrows = (max - roundUpTens(operands[1])) / 10; // (max - roundUpTens(operands[0]) - roundUpTens(operands[1])) / 10;
+  tailIndex = (operands[0] - 1) % 10 - 10;
 
   var r = 0;
   var task = setInterval(() => {
@@ -243,14 +232,13 @@ function drop() {
       clearInterval(task);
       showPrompt();
     } else {
-      // Erase row r.
-      for (var c = 0; c < 10; ++c) {
-        cells[r * 10 + c].setAttribute('fill', cellOffColor);
-      }
-
-      // Fill in from row r onward.
-      for (var i = 0; i < operands[0]; ++i) {
-        cells[(r + 1) * 10 + i].setAttribute('fill', cellOnColors[0]);
+      tailIndex += 10;
+      for (var i = 0; i <= tailIndex; ++i) {
+        if (whichOperand(i) < 0) {
+          cells[i].setAttribute('fill', cellOffColor);
+        } else {
+          cells[i].setAttribute('fill', cellOnColors[0]);
+        }
       }
     }
     r += 1;

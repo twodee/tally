@@ -126,6 +126,8 @@ function generateNewOperands() {
   operands[0] = Math.floor((max - 80) * Math.random()) + 1;
   var bigger10 = roundUpTens(operands[0]);
   operands[1] = Math.floor((max - bigger10) * Math.random()) + 1;
+
+  // operands = [15, 75];
 }
 
 function hidePrompt() {
@@ -134,24 +136,53 @@ function hidePrompt() {
 }
 
 function erase() {
-  var bigger = Math.max(operands[0], operands[1]);
-  var i = 0;
+  // var bigger = Math.max(operands[0], operands[1]);
+  // var i = 0;
+  var nrows = roundUpTens(operands[0] + operands[1]) / 10;
+  console.log("nrows:", nrows);
+  var r = 0;
+  var soFar = operands[1];
+  console.log("soFar:", soFar);
   var task = setInterval(() => {
-    if (i >= bigger) {
+    console.log("r:", r);
+    if (r > nrows) {
       clearInterval(task);
       generateNewOperands();
       fill();
       // setTimeout(fill, 2000);
     } else { 
-      if (i < operands[0]) {
-        cells[tailIndex - i].setAttribute('fill', cellOffColor);
+      // Clear out old top row of operand 1.
+      for (var i = 0; i < soFar % 10; ++i) {
+        cells[max - soFar + i].setAttribute('fill', cellOffColor);
       }
-      if (i < operands[1]) {
-        cells[i + max - operands[1]].setAttribute('fill', cellOffColor);
+
+      // Clear out prefix of new top row.
+      if (soFar > 10) {
+        soFar -= 10;
+        var complement = 10 - soFar % 10;
+        for (var i = 0; i < complement; ++i) {
+          cells[max - soFar - i - 1].setAttribute('fill', cellOffColor);
+        }
+      }
+
+      // Clear out old top row of operand 0.
+      if (tailIndex - operands[0] + 1 < max) {
+        for (var i = 0; i < 10; ++i) {
+          // console.log("tailIndex - operands[0] + 1 + i:", tailIndex - operands[0] + 1 + i);
+          cells[tailIndex - operands[0] + 1 + i].setAttribute('fill', cellOffColor);
+        }
+
+        // Fill in new bottom row of operand 0.
+        tailIndex += 10;
+        for (var i = 0; i < operands[0]; ++i) {
+          if (tailIndex - i < max) {
+            cells[tailIndex - i].setAttribute('fill', cellOnColors[0]);
+          }
+        }
       }
     }
-    i += 1;
-  }, 10);
+    r += 1;
+  }, 100);
 }
 
 function whichOperand(i) {
@@ -206,16 +237,19 @@ function onUnhover(i) {
 }
 
 function fill() {
-  var i = 0;
+  var r = 0;
+  var soFar = operands[1] % 10;
   var task = setInterval(() => {
-    if (i >= operands[1]) {
+    if (soFar > operands[1]) {
       clearInterval(task);
       setTimeout(drop, 200);
     } else {
-      cells[max - 1 - i].setAttribute('fill', cellOnColors[1]);
+      for (var i = 0; i < soFar; ++i) {
+        cells[max - 1 - i].setAttribute('fill', cellOnColors[1]);
+      }
+      soFar += 10;
     }
-    i += 1;
-  }, 10);
+  }, 100);
 }
 
 function roundUpTens(x) {

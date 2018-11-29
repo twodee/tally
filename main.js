@@ -280,7 +280,7 @@ function migrateCellDown(r, c) {
 
 function migrateCellUp(r, c) {
   isLocked = true;
-  overlay.style.display = 'display';
+  overlay.style.display = 'block';
   var tasks = [];
 
   var dropClicked = () => {
@@ -308,7 +308,7 @@ function migrateCellUp(r, c) {
   };
   tasks.push(swapOperands);
 
-  executeTasks(tasks, 0);
+  executeTasks(tasks);
 }
 
 function cellAt(r, c) {
@@ -325,7 +325,6 @@ function isDownwardlyMobile(cell, r, c) {
 
 function onHover(i) {
   return () => {
-    console.log("hi");
     if (isLocked) {
       return;
     }

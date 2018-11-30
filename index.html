@@ -7,8 +7,24 @@
 </head>
 <body>
   <div id="root">
-    <svg id="svg"></svg>
-    <input type="text" id="guessBox" value="">
+    <div id="left">
+      <div id="problem">
+        <div id="originalProblem">
+          <div id="originalLine0">  <span id="originalOperand0">##</span></div>
+          <div id="originalLine1">+ <span id="originalOperand1">##</span></div>
+          <div id="originalLine2">or</div>
+        </div>
+        <div id="line0">  <span id="operand0">##</span></div>
+        <div id="line1"><span id="plus">+</span> <span id="operand1">##</span></div>
+        <div id="line2">
+          <input type="text" id="guessBox" dir="rtl">
+          <img src="star.svg" id="star">
+        </div>
+      </div>
+    </div>
+    <div id="right">
+      <svg id="svg"></svg>
+    </div>
   </div>
   <div id="overlay"></div>
 </body>

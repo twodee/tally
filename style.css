@@ -2,22 +2,6 @@
   box-sizing: border-box;
 }
 
-#guessBox {
-  padding: 0;
-  margin: 0;
-  position: absolute;
-  left: 50px;
-  top: 200px;
-  transform: translate(-50%, -50%);
-  display: none;
-  text-align: center;
-  border: none;
-  outline: none;
-  font-size: 24pt;
-  background-color: transparent;
-  vertical-align: middle;
-}
-
 svg {
   font-family: sans-serif;
   width: 100%;
@@ -70,4 +54,92 @@ svg {
   right: 0;
   top: 0;
   bottom: 0;
+}
+
+#left {
+  font-family: sans-serif;
+  text-align: right;
+  width: 150px;
+  position: fixed;
+  left: 30px;
+  top: 0;
+  bottom: 0;
+}
+
+#right {
+  position: fixed;
+  left: 210px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+
+#originalProblem {
+  display: none;
+  color: rgb(180, 180, 180);
+  font-size: 20pt;
+  position: absolute;
+  top: -30px;
+  right: 0;
+  transform: translate(0, -100%);
+}
+
+#guessBox {
+  direction: rtl;
+  unicode-bidi: bidi-override;
+  position: relative;
+  width: 100%;
+  top: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  text-align: right;
+  border: none;
+  outline: none;
+  font-size: 48pt;
+  background-color: rgb(230, 230, 230);
+  border-top: 3px solid black;
+  visibility: hidden;
+}
+
+#problem {
+  font-size: 48pt;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+#originalLine2 {
+  margin: 20px 0;
+}
+
+#line2 {
+  position: relative;
+}
+
+#star {
+  display: none;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 2s infinite normal linear;
+}
+
+@keyframes spin {
+  0% {
+    transform: translate(0, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(0, -50%) scale(2) rotate(359deg);
+  }
+  100% {
+    transform: translate(0, -50%) scale(1) rotate(719deg);
+  }
+}
+
+.terminal {
+  pointer-events: none;
 }

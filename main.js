@@ -14,12 +14,30 @@ var max = 100;
 var tailIndex = null;
 var isLocked = false;
 var overlay = null;
+var labelOperand0 = null;
+var labelOperand1 = null;
+var labelOriginalOperand0 = null;
+var labelOriginalOperand1 = null;
+var labelPlus = null;
+var originalProblemRoot = null;
+var terminalCellLabels = [];
+var star = null;
 
 function onReady() {
   var svg = document.getElementById('svg');
   root = document.getElementById('root');
   guessBox = document.getElementById('guessBox');
   overlay = document.getElementById('overlay');
+  labelOperand0 = document.getElementById('operand0');
+  labelOperand1 = document.getElementById('operand1');
+  labelOriginalOperand0 = document.getElementById('originalOperand0');
+  labelOriginalOperand1 = document.getElementById('originalOperand1');
+  originalProblemRoot = document.getElementById('originalProblem');
+  labelPlus = document.getElementById('plus');
+  star = document.getElementById('star');
+
+  labelOperand0.style.color = cellColors[1];
+  labelOperand1.style.color = cellColors[2];
 
   cellSize = root.offsetWidth / resolution;
   fontSize = cellSize * 0.3;
@@ -27,6 +45,7 @@ function onReady() {
   padding = cellSize / 26;
 
   svg.setAttribute('viewBox', '0 0 ' + (cellSize * resolution) + ' ' + (cellSize * resolution));
+  svg.setAttribute('preserveAspectRatio', 'xMinYMid');
 
   for (var r = 0; r < resolution; ++r) {
     for (var c = 0; c < resolution; ++c) {
@@ -46,6 +65,22 @@ function onReady() {
     }
   }
 
+  for (var i = 0; i < 2; ++i) {
+    var label = document.createElementNS(svgNamespace, 'text');
+    label.setAttribute('class', 'terminal');
+    label.setAttribute('x', 0);
+    label.setAttribute('y', 0);
+    label.setAttribute('font-size', fontSize);
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('fill', cellTextColor);
+    label.setAttribute('alignment-baseline', 'central');
+    label.setAttribute('dominant-baseline', 'central');
+    label.setAttribute('opacity', 0);
+    label.textContent = '#';
+    svg.appendChild(label);
+    terminalCellLabels.push(label);
+  }
+
   guessBox.addEventListener('keyup', onKeyUp);
 
   resize();
@@ -56,12 +91,26 @@ function onReady() {
   });
 
   synchronizeCells();
+  next();
 }
 
 function synchronizeCells() {
   cells.forEach(cell => {
     cell.svg.setAttribute('fill', cellColors[cell.state]);
   });
+}
+
+function showTerminalCell(iOperand, iCell) {
+  if (operands[iOperand] == 0) {
+    terminalCellLabels[iOperand].setAttribute('opacity', 0);
+  } else {
+    var r = Math.floor(iCell / resolution);
+    var c = iCell % resolution;
+    terminalCellLabels[iOperand].setAttribute('x', (c + 0.5) * cellSize);
+    terminalCellLabels[iOperand].setAttribute('y', (r + 0.5) * cellSize);
+    terminalCellLabels[iOperand].setAttribute('opacity', 1);
+    terminalCellLabels[iOperand].textContent = operands[iOperand];
+  }
 }
 
 function resize() {
@@ -76,14 +125,24 @@ function onKeyUp(event) {
 function checkGuess() {
   var guess;
   if (integerPattern.test(guessBox.value)) {
-    guess = parseInt(guessBox.value);
+    guess = '';
+    for (var i = guessBox.value.length - 1; i >= 0; --i) {
+      guess += guessBox.value[i];
+    }
+    guess = parseInt(guess);
   } else {
     guess = 0;
   }
 
   if (guess == operands[0] + operands[1]) {
-    hidePrompt();
-    next();
+    guessBox.disabled = true;
+    star.style.display = 'block';
+    setTimeout(() => {
+      star.style.display = 'none';
+      guessBox.disabled = false;
+      hideProblem();
+      next();
+    }, 3000);
   } else {
     shakeGuess(guess);
   }
@@ -97,8 +156,10 @@ function shakeGuess(guess) {
   var startMillis = new Date().getTime();
   var targetMillis = 3 * Math.PI / 20 * 1000;
 
-  var oldX = guessBox.style.left;
-  var oldY = guessBox.style.top;
+  // TODO: why do I need getComputedStyle? The properties are set literally in the CSS.
+  var style = window.getComputedStyle(guessBox);
+  var oldX = style.left;
+  var oldY = style.top;
 
   oldX = parseFloat(oldX.substring(0, oldX.length - 2));
   oldY = parseFloat(oldY.substring(0, oldY.length - 2));
@@ -122,8 +183,8 @@ function shakeGuess(guess) {
 }
 
 function next() {
-  isLocked = true;
-  hidePrompt();
+  lock();
+  hideProblem();
   erase();
 }
 
@@ -136,19 +197,27 @@ function generateNewOperands() {
   operands[0] = Math.floor((max - 80) * Math.random()) + 1;
   var bigger10 = roundUpTens(operands[0]);
   operands[1] = Math.floor((max - bigger10) * Math.random()) + 1;
-
-  operands = [7, 88];
-  console.log("operands:", operands);
+  labelOriginalOperand0.innerText = operands[0];
+  labelOriginalOperand1.innerText = operands[1];
+  synchronizeProblemLabels();
 }
 
-function hidePrompt() {
-  isPrompting = false;
-  guessBox.style.display = 'none';
+function synchronizeProblemLabels() {
+  labelOperand0.innerText = operands[0];
+  labelOperand1.innerText = operands[1];
+}
+
+function hideProblem() {
+  originalProblemRoot.style.display = 'none';
+  labelPlus.style.display = 'none';
+  guessBox.style.visibility = 'hidden';
+  labelOperand0.style.visibility = 'hidden';
+  labelOperand1.style.visibility = 'hidden';
+  terminalCellLabels[0].setAttribute('opacity', 0);
+  terminalCellLabels[1].setAttribute('opacity', 0);
 }
 
 function erase() {
-  // var bigger = Math.max(operands[0], operands[1]);
-  // var i = 0;
   var nrows = roundUpTens(operands[0] + operands[1]) / 10;
   var r = 0;
   var soFar = operands[1];
@@ -157,7 +226,6 @@ function erase() {
       clearInterval(task);
       generateNewOperands();
       fill();
-      // setTimeout(fill, 2000);
     } else { 
       // Clear out old top row of operand 1.
       for (var i = 0; i < soFar % 10; ++i) {
@@ -187,8 +255,9 @@ function erase() {
           }
         }
       }
+      r += 1;
+      synchronizeCells();
     }
-    r += 1;
   }, 100);
 }
 
@@ -245,15 +314,26 @@ function executeTasks(tasks, i = 0) {
   }
 }
 
-function migrateCellDown(r, c) {
+function lock() {
   isLocked = true;
   overlay.style.display = 'block';
+}
+
+function unlock() {
+  isLocked = false;
+  overlay.style.display = 'none';
+}
+
+function migrateCellDown(r, c) {
   var tasks = [];
 
   var dropClicked = () => {
     cellAt(r + 1, c).state = 1;
     cellAt(r, c).state = 1;
     cellAt(r, (operands[0] - 1) % 10).state = 0;
+    operands[0] -= 1;
+    tailIndex -= 1;
+    showTerminalCell(0, tailIndex);
   };
   tasks.push(dropClicked);
 
@@ -266,27 +346,50 @@ function migrateCellDown(r, c) {
   }
 
   var swapOperands = () => {
-    operands[0] -= 1;
     operands[1] += 1;
     cellAt(r + 1, cPrime - 1).state = 2;
-    tailIndex -= 1;
-    isLocked = false;
-    overlay.style.display = 'none';
   };
   tasks.push(swapOperands);
+ 
+  // If we're about to wipe an entire row, shift everything down.
+  if ((operands[0] - 1) % 10 == 0 && operands[0] - 1 > 0) {
+    var invoid = () => {
+      for (var rPrime = r; rPrime > 0; --rPrime) {
+        for (var c = 0; c < 10; ++c) {
+          cellAt(rPrime, c).state = cellAt(rPrime - 1, c).state;
+        }
+      }
+      for (var c = 0; c < 10; ++c) {
+        cellAt(0, c).state = 0;
+      }
+      tailIndex += 10;
+      showTerminalCell(0, tailIndex);
+    };
+    tasks.push(invoid);
+  }
+
+  var cleanUp = () => {
+    unlock();
+    originalProblemRoot.style.display = 'block';
+    synchronizeProblemLabels();
+    showTerminalCell(0, tailIndex);
+    showTerminalCell(1, cells.length - operands[1]);
+  };
+  tasks.push(cleanUp);
 
   executeTasks(tasks);
 }
 
 function migrateCellUp(r, c) {
-  isLocked = true;
-  overlay.style.display = 'block';
+  lock();
   var tasks = [];
 
   var dropClicked = () => {
     cellAt(r - 1, c).state = 2;
     cellAt(r, c).state = 2;
     cellAt(r, 9 - (operands[1] - 1) % 10).state = 0;
+    operands[1] -= 1;
+    showTerminalCell(1, cells.length - operands[1]);
   };
   tasks.push(dropClicked);
 
@@ -299,14 +402,37 @@ function migrateCellUp(r, c) {
   }
 
   var swapOperands = () => {
-    operands[1] -= 1;
     operands[0] += 1;
     cellAt(r - 1, cPrime + 1).state = 1;
     tailIndex += 1;
-    isLocked = false;
-    overlay.style.display = 'none';
   };
   tasks.push(swapOperands);
+ 
+  // If we're about to wipe an entire row, shift everything down.
+  if ((operands[1] - 1) % 10 == 0 && operands[1] - 1 > 0) {
+    var invoid = () => {
+      for (var rPrime = r; rPrime > 0; --rPrime) {
+        for (var c = 0; c < 10; ++c) {
+          cellAt(rPrime, c).state = cellAt(rPrime - 1, c).state;
+        }
+      }
+      for (var c = 0; c < 10; ++c) {
+        cellAt(0, c).state = 0;
+      }
+      tailIndex += 10;
+      showTerminalCell(0, tailIndex);
+    };
+    tasks.push(invoid);
+  }
+
+  var cleanUp = () => {
+    unlock();
+    originalProblemRoot.style.display = 'block';
+    synchronizeProblemLabels();
+    showTerminalCell(0, tailIndex);
+    showTerminalCell(1, cells.length - operands[1]);
+  };
+  tasks.push(cleanUp);
 
   executeTasks(tasks);
 }
@@ -349,9 +475,12 @@ function onUnhover(i) {
 function fill() {
   var r = 0;
   var soFar = operands[1] % 10;
+  labelOperand1.style.visibility = 'visible';
+
   var task = setInterval(() => {
     if (soFar > operands[1]) {
       clearInterval(task);
+      showTerminalCell(1, cells.length - operands[1]);
       setTimeout(drop, 200);
     } else {
       for (var i = 0; i < soFar; ++i) {
@@ -370,12 +499,14 @@ function roundUpTens(x) {
 function drop() {
   var nrows = (max - roundUpTens(operands[1])) / 10; // (max - roundUpTens(operands[0]) - roundUpTens(operands[1])) / 10;
   tailIndex = (operands[0] - 1) % 10 - 10;
+  labelOperand0.style.visibility = 'visible'; 
 
   var r = 0;
   var task = setInterval(() => {
     if (r >= nrows) {
+      showTerminalCell(0, tailIndex);
       clearInterval(task);
-      showPrompt();
+      setTimeout(showPrompt, 1000);
     } else {
       tailIndex += 10;
       for (var i = 0; i <= tailIndex; ++i) {
@@ -392,11 +523,11 @@ function drop() {
 }
 
 function showPrompt() {
-  isPrompting = true;
+  labelPlus.style.display = 'inline';
   guessBox.value = '';
-  guessBox.style.display = 'block';
+  guessBox.style.visibility = 'visible';
   guessBox.focus();
-  isLocked = false;
+  unlock();
 }
 
 function lerp(currentMillis, targetMillis, oldValue, newValue) {

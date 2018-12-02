@@ -92,6 +92,7 @@ function onReady() {
     guessBox.focus();
   });
 
+  hideProblem();
   synchronizeCells();
   next();
 }
@@ -200,7 +201,7 @@ function generateNewOperands() {
   operands[0] = Math.floor((max - 80) * Math.random()) + 1;
   var bigger10 = roundUpTens(operands[0]);
   operands[1] = Math.floor((max - bigger10) * Math.random()) + 1;
-  // operands = [4, 9];
+  // operands = [60, 1];
   labelOriginalOperand0.innerText = operands[0];
   labelOriginalOperand1.innerText = operands[1];
   synchronizeProblemLabels();
@@ -606,7 +607,7 @@ function roundUpTens(x) {
 
 function drop() {
   var nrows = (max - roundUpTens(operands[1])) / 10;
-  if (operands[0] % 10 + operands[1] % 10 <= 10) {
+  if (operands[0] % 10 + operands[1] % 10 <= 10 && operands[0] % 10 != 0 && operands[1] % 10 != 0) {
     nrows += 1;
   }
   tailIndex = (operands[0] - 1) % 10 - 10;

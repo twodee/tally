@@ -111,6 +111,7 @@ svg {
 }
 
 #problem {
+  display: none;
   font-size: 48pt;
   position: absolute;
   right: 0;

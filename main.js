@@ -23,6 +23,7 @@ var originalProblemRoot = null;
 var terminalCellLabels = [];
 var star = null;
 var questionLabel = null;
+var problemRoot = null;
 
 function onReady() {
   var svg = document.getElementById('svg');
@@ -37,6 +38,7 @@ function onReady() {
   labelPlus = document.getElementById('plus');
   star = document.getElementById('star');
   questionLabel = document.getElementById('question');
+  problemRoot = document.getElementById('problem');
 
   labelOperand0.style.color = cellColors[1];
   labelOperand1.style.color = cellColors[2];
@@ -93,6 +95,7 @@ function onReady() {
   });
 
   hideProblem();
+  problemRoot.style.visibility = 'visible';
   synchronizeCells();
   next();
 }

@@ -94,8 +94,8 @@ function onReady() {
     guessBox.focus();
   });
 
+  problemRoot.style.display = 'block';
   hideProblem();
-  problemRoot.style.visibility = 'visible';
   synchronizeCells();
   next();
 }
@@ -528,11 +528,11 @@ function cellAt(r, c) {
 }
 
 function isRightwardlyMobile(cell, r, c) {
-  return cell.state == 1 && cellAt(r, 9).state == 2;
+  return cell.state == 1 && cellAt(r, 9).state == 2 && c < 9 && cellAt(r, c + 1).state != 1;
 }
 
 function isLeftwardlyMobile(cell, r, c) {
-  return cell.state == 2 && cellAt(r, 0).state == 1;
+  return cell.state == 2 && cellAt(r, 0).state == 1 && c > 0 && cellAt(r, c - 1).state != 2;
 }
 
 function isUpwardlyMobile(cell, r, c) {

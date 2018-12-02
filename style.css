@@ -74,6 +74,14 @@ svg {
   right: 0;
 }
 
+#question {
+  color: rgb(180, 180, 180);
+  font-size: 20pt;
+  position: absolute;
+  top: 100%;
+  right: 0;
+}
+
 #originalProblem {
   display: none;
   color: rgb(180, 180, 180);

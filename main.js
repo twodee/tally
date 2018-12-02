@@ -10,7 +10,7 @@ var root = null;
 var padding = 5;
 var fontSize;
 var integerPattern = /^\d+$/;
-var max = 100;
+var max = resolution * resolution;
 var tailIndex = null;
 var isLocked = false;
 var overlay = null;
@@ -22,6 +22,7 @@ var labelPlus = null;
 var originalProblemRoot = null;
 var terminalCellLabels = [];
 var star = null;
+var questionLabel = null;
 
 function onReady() {
   var svg = document.getElementById('svg');
@@ -35,6 +36,7 @@ function onReady() {
   originalProblemRoot = document.getElementById('originalProblem');
   labelPlus = document.getElementById('plus');
   star = document.getElementById('star');
+  questionLabel = document.getElementById('question');
 
   labelOperand0.style.color = cellColors[1];
   labelOperand1.style.color = cellColors[2];
@@ -120,6 +122,7 @@ function onKeyUp(event) {
   if (event.which == 13 && guessBox.value != '') {
     checkGuess();
   }
+  showQuestion();
 }
 
 function checkGuess() {
@@ -197,6 +200,7 @@ function generateNewOperands() {
   operands[0] = Math.floor((max - 80) * Math.random()) + 1;
   var bigger10 = roundUpTens(operands[0]);
   operands[1] = Math.floor((max - bigger10) * Math.random()) + 1;
+  // operands = [4, 9];
   labelOriginalOperand0.innerText = operands[0];
   labelOriginalOperand1.innerText = operands[1];
   synchronizeProblemLabels();
@@ -300,6 +304,12 @@ function onClick(i) {
     } else if (isUpwardlyMobile(cells[i], r, c)) {
       cells[i].svg.style.cursor = 'default';
       migrateCellUp(r, c);
+    } else if (isLeftwardlyMobile(cells[i], r, c)) {
+      cells[i].svg.style.cursor = 'default';
+      migrateCellLeft(r, c);
+    } else if (isRightwardlyMobile(cells[i], r, c)) {
+      cells[i].svg.style.cursor = 'default';
+      migrateCellRight(r, c);
     }
   }
 }
@@ -322,6 +332,78 @@ function lock() {
 function unlock() {
   isLocked = false;
   overlay.style.display = 'none';
+}
+
+function migrateCellLeft(r, c) {
+  var tasks = [];
+
+  var pushClicked = () => {
+    operands[1] -= 1;
+    showTerminalCell(1, max - operands[1]);
+  };
+  tasks.push(pushClicked);
+
+  for (var cPrime = c - 1; cellAt(r, cPrime).state == 0; --cPrime) {
+    var shift = ((cPrime) => () => {
+      cellAt(r, cPrime + 1).state = 0;
+      cellAt(r, cPrime).state = 1;
+    })(cPrime);
+    tasks.push(shift);
+  }
+
+  var swapOperands = () => {
+    operands[0] += 1;
+    tailIndex += 1;
+    cellAt(r, cPrime + 1).state = 1;
+  };
+  tasks.push(swapOperands);
+
+  var cleanUp = () => {
+    unlock();
+    originalProblemRoot.style.display = 'block';
+    synchronizeProblemLabels();
+    showTerminalCell(0, tailIndex);
+    showTerminalCell(1, cells.length - operands[1]);
+  };
+  tasks.push(cleanUp);
+
+  executeTasks(tasks);
+}
+
+function migrateCellRight(r, c) {
+  var tasks = [];
+
+  var pushClicked = () => {
+    operands[0] -= 1;
+    tailIndex -= 1;
+    showTerminalCell(0, tailIndex);
+  };
+  tasks.push(pushClicked);
+
+  for (var cPrime = c + 1; cellAt(r, cPrime).state == 0; ++cPrime) {
+    var shift = ((cPrime) => () => {
+      cellAt(r, cPrime - 1).state = 0;
+      cellAt(r, cPrime).state = 1;
+    })(cPrime);
+    tasks.push(shift);
+  }
+
+  var swapOperands = () => {
+    operands[1] += 1;
+    cellAt(r, cPrime - 1).state = 2;
+  };
+  tasks.push(swapOperands);
+
+  var cleanUp = () => {
+    unlock();
+    originalProblemRoot.style.display = 'block';
+    synchronizeProblemLabels();
+    showTerminalCell(0, tailIndex);
+    showTerminalCell(1, cells.length - operands[1]);
+  };
+  tasks.push(cleanUp);
+
+  executeTasks(tasks);
 }
 
 function migrateCellDown(r, c) {
@@ -441,12 +523,34 @@ function cellAt(r, c) {
   return cells[r * 10 + c];
 }
 
+function isRightwardlyMobile(cell, r, c) {
+  return cell.state == 1 && cellAt(r, 9).state == 2;
+}
+
+function isLeftwardlyMobile(cell, r, c) {
+  return cell.state == 2 && cellAt(r, 0).state == 1;
+}
+
 function isUpwardlyMobile(cell, r, c) {
-  return r > 0 && cell.state == 2 && cellAt(r - 1, c).state == 0 && cellAt(r - 1, 0).state == 1;
+  return r > 0 && cell.state == 2 && cellAt(r - 1, c).state == 0 && cellAt(r - 1, 0).state == 1 && cellAt(r - 1, 9).state == 0;
 }
 
 function isDownwardlyMobile(cell, r, c) {
-  return r < 9 && cell.state == 1 && cellAt(r + 1, c).state == 0 && cellAt(r + 1, 9).state == 2;
+  return r < 9 && cell.state == 1 && cellAt(r + 1, c).state == 0 && cellAt(r + 1, 9).state == 2 && cellAt(r + 1, 0).state == 0;
+}
+
+function showQuestion() {
+  if (guessBox.selectionStart == guessBox.selectionEnd) {
+    if (guessBox.selectionStart == 0) {
+      questionLabel.innerHTML = 'How many ones?';
+    } else if (guessBox.selectionStart == 1) {
+      questionLabel.innerHTML = 'How many tens?';
+    } else {
+      questionLabel.innerHTML = '';
+    }
+  } else {
+    questionLabel.innerHTML = '';
+  }
 }
 
 function onHover(i) {
@@ -462,6 +566,10 @@ function onHover(i) {
       cells[i].svg.style.cursor = 's-resize';
     } else if (isUpwardlyMobile(cells[i], r, c)) {
       cells[i].svg.style.cursor = 'n-resize';
+    } else if (isLeftwardlyMobile(cells[i], r, c)) {
+      cells[i].svg.style.cursor = 'w-resize';
+    } else if (isRightwardlyMobile(cells[i], r, c)) {
+      cells[i].svg.style.cursor = 'e-resize';
     }
   };
 }
@@ -497,7 +605,10 @@ function roundUpTens(x) {
 }
 
 function drop() {
-  var nrows = (max - roundUpTens(operands[1])) / 10; // (max - roundUpTens(operands[0]) - roundUpTens(operands[1])) / 10;
+  var nrows = (max - roundUpTens(operands[1])) / 10;
+  if (operands[0] % 10 + operands[1] % 10 <= 10) {
+    nrows += 1;
+  }
   tailIndex = (operands[0] - 1) % 10 - 10;
   labelOperand0.style.visibility = 'visible'; 
 
@@ -527,6 +638,7 @@ function showPrompt() {
   guessBox.value = '';
   guessBox.style.visibility = 'visible';
   guessBox.focus();
+  showQuestion();
   unlock();
 }
 

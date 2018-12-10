@@ -339,6 +339,7 @@ function unlock() {
 }
 
 function migrateCellLeft(r, c) {
+  lock();
   var tasks = [];
 
   var pushClicked = () => {
@@ -375,6 +376,7 @@ function migrateCellLeft(r, c) {
 }
 
 function migrateCellRight(r, c) {
+  lock();
   var tasks = [];
 
   var pushClicked = () => {
@@ -411,6 +413,7 @@ function migrateCellRight(r, c) {
 }
 
 function migrateCellDown(r, c) {
+  lock();
   var tasks = [];
 
   var dropClicked = () => {
@@ -455,11 +458,11 @@ function migrateCellDown(r, c) {
   }
 
   var cleanUp = () => {
-    unlock();
     originalProblemRoot.style.display = 'block';
     synchronizeProblemLabels();
     showTerminalCell(0, tailIndex);
     showTerminalCell(1, cells.length - operands[1]);
+    unlock();
   };
   tasks.push(cleanUp);
 

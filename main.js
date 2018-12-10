@@ -182,6 +182,7 @@ function shakeGuess(guess) {
       guessBox.style.left = oldX + 'px';
       guessBox.value = '';
       guessBox.focus();
+      showQuestion();
     } else { 
       var intensity = amplitude * Math.exp(-lambda * elapsedMillis / 1000) * Math.cos(frequency * elapsedMillis / 1000 - Math.PI * 0.5);
       guessBox.style.left = (oldX + intensity) + 'px';
